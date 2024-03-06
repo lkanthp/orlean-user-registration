@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
 using GrainInterfaces;
+using Grains;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Orleans.Configuration;
@@ -26,17 +27,21 @@ namespace SiloHost
                         options.ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
                         Console.WriteLine("Connection string: " + options.ConnectionString);
                     })
+                    //.ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(UserGrain).Assembly).WithReferences())
                     .AddAdoNetGrainStorage("MySqlStore", options =>
                     {
                         options.Invariant = "MySql.Data.MySqlClient";
                         options.ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
-                        options.UseJsonFormat = true;
+                        options.UseJsonFormat = false;
                         Console.WriteLine("Connection string: " + options.ConnectionString);
                     })
                 //.AddMemoryGrainStorage("PubSubStore")
-                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IUserGrain).Assembly).WithReferences())
-                    .ConfigureLogging(logging => logging.AddConsole())
-                .Build();
+                .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(UserGrain).Assembly).WithReferences())
+                .ConfigureLogging(logging =>
+                {
+                    logging.AddConsole();
+                     logging.SetMinimumLevel(LogLevel.Debug); // Set log level to Debug for more detailed logging
+                }).Build();
 
             await host.StartAsync();
 
